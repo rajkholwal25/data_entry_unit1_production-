@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 1 - Holographic Data Entry System</title>
+    <meta name="description" content="Data entry system for Unit 1 (Holographic) post-press processes">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="label-sap-styles.css?v=20260615r">
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="background-animation"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header-top-actions">
+                <button type="button" id="btn-open-dims" class="btn-trace btn-dims" title="Update batch width and length">
+                    ↔ Update Batch Data
+                </button>
+                <button type="button" id="btn-open-labels" class="btn-trace btn-labels" title="Process output labels">
+                    🏷️ Process Labels
+                </button>
+                <button type="button" id="btn-open-grn" class="btn-trace btn-grn" title="GRN raw material roll labels">
+                    📦 GRN Roll Labels
+                </button>
+                <button type="button" id="btn-open-trace" class="btn-trace" title="Material traceability">
+                    🧬 Trace
+                </button>
+            </div>
+            <div class="company-name">Printing & Packaging</div>
+            <h1 class="main-title" id="page-main-title">Unit 1 - Holographic</h1>
+            <p class="subtitle" id="page-subtitle">Select a holographic process and machine to enter production data</p>
+        </header>
+
+        <!-- Material Traceability (toggle from header) -->
+        <section id="traceability-view" class="traceability-view hidden" aria-label="Material traceability">
+            <div class="traceability-toolbar">
+                <button type="button" id="btn-back-machines" class="btn-back-machines">← Back to Machines</button>
+            </div>
+            <h2 class="trace-title">🧬 Material Traceability</h2>
+            <p class="trace-sub">
+                Links come from <strong>report completion</strong> (Finish Job → inputs you selected + qty used).
+                Production Order search lists all inputs/outputs for a job. Batch search needs <strong>production order + batch number</strong> together (batch IDs can repeat across orders).
+            </p>
+
+            <div class="trace-mode-tabs">
+                <button type="button" class="trace-mode-tab active" data-mode="po">Search by Production Order</button>
+                <button type="button" class="trace-mode-tab" data-mode="batch">Search by Batch Number</button>
+            </div>
+
+            <div class="trace-search-panel active" id="trace-panel-po">
+                <input id="trace-po-input" type="text" inputmode="numeric" placeholder="Production Order # (e.g. 753)" aria-label="Production Order number" />
+                <button type="button" class="trace-btn-primary" id="trace-search-po-btn">Search</button>
+            </div>
+
+            <div class="trace-search-panel trace-search-panel-batch" id="trace-panel-batch">
+                <input id="trace-batch-po-input" type="text" inputmode="numeric" placeholder="Production Order # (required)" aria-label="Production Order number for batch trace" />
+                <input id="trace-batch-input" type="text" placeholder="Output batch (e.g. PET-45-1001-HF-SLT-002)" aria-label="Output batch number" />
+                <button type="button" class="trace-btn-primary" id="trace-search-batch-btn">Search Batch</button>
+            </div>
+
+            <p class="trace-batch-hint" id="trace-batch-hint">Batch trace: enter output batch — production order auto-fills from the job that produced it (e.g. SLT-002 → order 755, not 753).</p>
+
+            <div class="trace-status" id="trace-status"></div>
+
+            <div class="trace-po-summary" id="trace-po-summary">
+                <div class="trace-summary-card inputs" id="trace-card-inputs" data-view="inputs">
+                    <div class="trace-summary-label">Total Input Batches</div>
+                    <div class="trace-summary-count" id="trace-input-count">0</div>
+                    <div class="trace-summary-hint">All issued inputs — raw rolls or prev. process outputs</div>
+                </div>
+                <div class="trace-summary-card outputs selected" id="trace-card-outputs" data-view="outputs">
+                    <div class="trace-summary-label">Total Output Batches</div>
+                    <div class="trace-summary-count" id="trace-output-count">0</div>
+                    <div class="trace-summary-hint">Batches produced for this production order</div>
+                </div>
+            </div>
+
+            <div id="trace-results"></div>
+        </section>
+
+        <!-- Process Labels (toggle from header — like Trace) -->
+        <section id="process-labels-view" class="traceability-view hidden" aria-label="Process labels">
+            <div class="traceability-toolbar">
+                <button type="button" id="btn-back-from-labels" class="btn-back-machines">← Back to Machines</button>
+            </div>
+            <h2 class="trace-title">🏷️ Process Labels</h2>
+            <p class="trace-sub">
+                Reprint process output labels from <strong>saved report completion</strong> data.
+                Enter a production order to list every output batch — click a batch to preview and print its label.
+            </p>
+            <div class="labels-search-row">
+                <input id="home-label-po-input" type="text" inputmode="numeric" placeholder="Production Order # (e.g. 762)" aria-label="Production Order for process labels" />
+                <button type="button" class="trace-btn-primary" id="home-label-search-btn">Load</button>
+            </div>
+            <div class="home-label-status" id="home-label-status"></div>
+            <div class="labels-body">
+                <div class="home-label-list-wrap">
+                    <div class="home-label-list-title">Output batches</div>
+                    <div id="home-label-output-list" class="home-label-output-list">
+                        <p class="home-label-placeholder">Enter production order and click Load</p>
+                    </div>
+                </div>
+                <div class="home-label-preview-wrap">
+                    <div class="home-label-list-title">Label preview</div>
+                    <div id="home-label-preview-host" class="home-label-preview-host">
+                        <p class="home-label-placeholder">Select an output batch</p>
+                    </div>
+                    <div class="home-label-actions" id="home-label-actions"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GRN Roll Labels (FBD-RM raw material) -->
+        <section id="grn-roll-labels-view" class="traceability-view hidden" aria-label="GRN roll labels">
+            <div class="traceability-toolbar">
+                <button type="button" id="btn-back-from-grn" class="btn-back-machines">← Back to Machines</button>
+            </div>
+            <h2 class="trace-title">📦 GRN Roll Labels</h2>
+            <p class="trace-sub">
+                Print labels for supplier rolls in warehouse <strong>FBD-RM</strong>.
+                First click <strong>Sync from SAP</strong> to load all FBD-RM stock into
+                <code>raw_material_mirror</code> (keeps history; updates duplicates only), then search by batch / roll number to preview and print.
+            </p>
+            <div class="grn-toolbar-row">
+                <button type="button" class="trace-btn-primary" id="grn-sync-btn">Sync from SAP</button>
+                <span class="grn-mirror-stats" id="grn-mirror-stats">Mirror: —</span>
+            </div>
+            <div class="labels-search-row">
+                <input id="grn-batch-input" type="text" placeholder="Batch / Roll No" aria-label="Batch number for GRN roll label" />
+                <button type="button" class="trace-btn-primary" id="grn-search-btn">Search</button>
+            </div>
+            <div class="home-label-status" id="grn-status"></div>
+            <div class="labels-body">
+                <div class="home-label-list-wrap">
+                    <div class="home-label-list-title">Matching rolls</div>
+                    <div id="grn-roll-list" class="home-label-output-list">
+                        <p class="home-label-placeholder">Sync from SAP, then search a batch number</p>
+                    </div>
+                </div>
+                <div class="home-label-preview-wrap">
+                    <div class="home-label-list-title">Label preview</div>
+                    <div id="grn-preview-host" class="home-label-preview-host">
+                        <p class="home-label-placeholder">Select a roll</p>
+                    </div>
+                    <div class="home-label-actions" id="grn-label-actions"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Update batch width / length (standalone — like Trace & Labels) -->
+        <section id="batch-dimensions-view" class="traceability-view hidden" aria-label="Update batch data">
+            <div class="traceability-toolbar">
+                <button type="button" id="btn-back-from-dims" class="btn-back-machines">← Back to Machines</button>
+            </div>
+            <h2 class="trace-title">↔ Update Batch Data</h2>
+            <p class="trace-sub">
+                Search by <strong>production order</strong> and set width (mm) / length (m) on saved output batches.
+                Updates the same batch in local DB — no new batch is created.
+                With <strong>SAP sync</strong> on, SAP is updated first; local changes only if SAP succeeds.
+            </p>
+            <div class="batch-dims-po-row">
+                <label for="batch-dims-po-input">Production Order</label>
+                <input type="text" id="batch-dims-po-input" inputmode="numeric" placeholder="e.g. 762" aria-label="Production order for batch dimensions" />
+                <button type="button" class="trace-btn-primary" id="batch-dims-load-btn">Load batches</button>
+            </div>
+            <div class="batch-dims-status" id="batch-dims-status"></div>
+            <div class="batch-dims-table-wrap" id="batch-dims-table-wrap">
+                <p class="home-label-placeholder">Enter production order and click Load batches</p>
+            </div>
+            <div class="batch-dims-footer">
+                <label class="batch-dims-sync-label">
+                    <input type="checkbox" id="batch-dims-sync-sap" checked />
+                    Also update SAP (U_Width / U_Length)
+                </label>
+            </div>
+        </section>
+
+        <!-- Home: machines only -->
+        <div id="home-view" class="home-view">
+        <div id="unit-1-machines" class="branch-machines" data-branch="unit-1">
+            <div class="process-grid">
+                <!-- Embossing -->
+                <div class="process-card">
+                    <div class="process-header">
+                        <div class="process-icon embossing">
+                            <span>🔲</span>
+                        </div>
+                        <div>
+                            <h2 class="process-title">Embossing</h2>
+                            <p class="process-code">Allowed U_PCode: EMB</p>
+                        </div>
+                    </div>
+                    <div class="machine-list">
+                        <a href="data-entry.html?process=embossing&machine=embossing-1" class="machine-item" id="embossing-1">
+                            <span class="machine-name">Embossing-1</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                        <a href="data-entry.html?process=embossing&machine=embossing-2" class="machine-item" id="embossing-2">
+                            <span class="machine-name">Embossing-2</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                        <a href="data-entry.html?process=embossing&machine=embossing-3" class="machine-item" id="embossing-3">
+                            <span class="machine-name">Embossing-3</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Coating -->
+                <div class="process-card">
+                    <div class="process-header">
+                        <div class="process-icon coating">
+                            <span>🎨</span>
+                        </div>
+                        <div>
+                            <h2 class="process-title">Coating</h2>
+                            <p class="process-code">Allowed U_PCode: COT (output → OHJW-U1)</p>
+                        </div>
+                    </div>
+                    <div class="machine-list">
+                        <a href="data-entry.html?process=coating&machine=coating-1" class="machine-item" id="coating-1">
+                            <span class="machine-name">Coating</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Rewinding -->
+                <div class="process-card">
+                    <div class="process-header">
+                        <div class="process-icon rewinding">
+                            <span>🔄</span>
+                        </div>
+                        <div>
+                            <h2 class="process-title">Rewinding</h2>
+                            <p class="process-code">Allowed U_PCode: REW</p>
+                        </div>
+                    </div>
+                    <div class="machine-list">
+                        <a href="data-entry.html?process=rewinding&machine=rewinding-1" class="machine-item" id="rewinding-1">
+                            <span class="machine-name">Rewinding-1</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                        <a href="data-entry.html?process=rewinding&machine=rewinding-2" class="machine-item" id="rewinding-2">
+                            <span class="machine-name">Rewinding-2</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Slitting -->
+                <div class="process-card">
+                    <div class="process-header">
+                        <div class="process-icon slitting">
+                            <span>✂️</span>
+                        </div>
+                        <div>
+                            <h2 class="process-title">Slitting</h2>
+                            <p class="process-code">Allowed U_PCode: SLT</p>
+                        </div>
+                    </div>
+                    <div class="machine-list">
+                        <a href="data-entry.html?process=slitting&machine=slitting-1" class="machine-item" id="slitting-1">
+                            <span class="machine-name">Slitting-1</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                        <a href="data-entry.html?process=slitting&machine=slitting-2" class="machine-item" id="slitting-2">
+                            <span class="machine-name">Slitting-2</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Metallisation -->
+                <div class="process-card">
+                    <div class="process-header">
+                        <div class="process-icon metallisation">
+                            <span>✨</span>
+                        </div>
+                        <div>
+                            <h2 class="process-title">Metallisation</h2>
+                            <p class="process-code">Allowed U_PCode: MET</p>
+                        </div>
+                    </div>
+                    <div class="machine-list">
+                        <a href="data-entry.html?process=metallisation&machine=metallisation-1" class="machine-item" id="metallisation-1">
+                            <span class="machine-name">Metallisation-1</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Finished Goods (FG) -->
+                <div class="process-card">
+                    <div class="process-header">
+                        <div class="process-icon finished-goods">
+                            <span>📦</span>
+                        </div>
+                        <div>
+                            <h2 class="process-title">Finished Goods (FG)</h2>
+                            <p class="process-code">QC approval, report completion &amp; label printing</p>
+                        </div>
+                    </div>
+                    <div class="machine-list">
+                        <a href="finished-goods.html" class="machine-item" id="finished-goods-entry">
+                            <span class="machine-name">FG Data Entry</span>
+                            <span class="machine-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div id="trace-label-print-container" class="trace-label-print-container" aria-hidden="true"></div>
+
+    <script src="node_modules/qrcode-generator/dist/qrcode.js"></script>
+    <script src="node_modules/html2canvas/dist/html2canvas.min.js"></script>
+    <script src="process-label-formats.js?v=20260615r"></script>
+    <script src="label-print-raster.js?v=20260707a"></script>
+    <script src="index.js"></script>
+    <script src="traceability.js?v=20260616e"></script>
+    <script src="process-labels-home.js?v=20260706b"></script>
+    <script src="grn-roll-labels.js?v=20260716a"></script>
+    <script src="batch-dimensions-backfill.js?v=20260702b"></script>
+</body>
+
+</html>

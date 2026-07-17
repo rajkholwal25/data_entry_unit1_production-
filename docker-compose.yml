@@ -1,0 +1,40 @@
+# Server deploy only (saturn / Bitwise). Not for local npm run.
+
+#   docker compose up -d --build
+
+#   docker compose logs -f data-entry
+
+
+
+services:
+
+  data-entry:
+
+    build:
+
+      context: .
+
+      dockerfile: Dockerfile
+
+    image: data-entry-unit1:${IMAGE_TAG:-latest}
+
+    container_name: data-entry-unit1
+
+    restart: unless-stopped
+
+    network_mode: host
+
+    env_file:
+
+      - .env
+
+    environment:
+
+      HOST: "0.0.0.0"
+
+      PORT: "5006"
+
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+

@@ -1,0 +1,381 @@
+/**
+ * Shared SAP-style label layout (150mm × 100mm) — FG packing slip & process output labels.
+ * Used by finished-goods, data-entry process labels, and traceability Process Label panel.
+ */
+
+.label-page,
+.label-page-inner {
+    width: 150mm;
+    height: 100mm;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.sap-label {
+    width: 150mm;
+    height: 100mm;
+    padding: 5mm 6mm;
+    box-sizing: border-box;
+    border: 1.5px solid #222;
+    border-radius: 3mm;
+    background: #fff;
+    color: #000;
+    font-family: Calibri, Carlito, Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sap-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 4mm;
+    flex-shrink: 0;
+}
+
+.sap-logo {
+    flex: 0 0 auto;
+}
+
+.sap-logo img {
+    width: 28.75mm;
+    max-height: 16mm;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Process output labels — larger B&W logo flush left, uniform row spacing */
+.sap-label.process-output-label {
+    padding: 2mm 5mm 3mm 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Let the fields region take the remaining height and stretch the table so its
+   rows distribute evenly — fills the full 100mm label instead of leaving a
+   blank bottom band (which was clipping/blanking the printed label). */
+.sap-label.process-output-label .sap-fields {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.sap-label.process-output-label .sap-fields-grid {
+    height: 100%;
+}
+
+.sap-label.process-output-label .sap-logo {
+    margin: 0 0 0 5mm;
+    padding: 0;
+    background: transparent;
+    flex-shrink: 0;
+    line-height: 0;
+    align-self: center;
+}
+
+.sap-label.process-output-label .sap-logo img,
+.sap-label.process-output-label .sap-logo-bw {
+    width: 62mm;
+    max-height: 34mm;
+    margin: -1.5mm 0 0 0;
+    background: transparent;
+    mix-blend-mode: multiply;
+    filter: grayscale(100%) contrast(1.2);
+    object-position: left top;
+    display: block;
+}
+
+.sap-label.process-output-label .sap-top {
+    margin-bottom: -2mm;
+    gap: 2mm;
+    align-items: center;
+    padding-top: 0;
+}
+
+.sap-label.process-output-label .sap-company {
+    padding-top: 1mm;
+    align-self: center;
+    margin: 0 5mm 0 0;
+}
+
+.sap-label.process-output-label .sap-title {
+    margin: calc(-7.5mm + 8px) 0 0.2mm;
+    font-size: 5.8mm;
+    line-height: 1.05;
+}
+
+.sap-label.process-output-label .sap-fields {
+    font-size: 4.8mm;
+    line-height: 1.1;
+}
+
+.sap-label.process-output-label .sap-fields-grid {
+    width: 100%;
+    margin-left: 3mm;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.sap-label.process-output-label .sap-fields-grid .col-k {
+    width: 30mm;
+}
+
+.sap-label.process-output-label .sap-fields-grid .col-v {
+    width: auto;
+}
+
+.sap-label.process-output-label .sap-fields-grid .col-barcode {
+    width: 48mm;
+}
+
+.sap-label.process-output-label .sap-fields-grid .k {
+    width: 30mm;
+    padding-left: 0;
+    font-weight: 500;
+    font-size: 4.8mm;
+}
+
+.sap-label.process-output-label .sap-fields-grid td.v {
+    padding-left: 2mm;
+    font-weight: 400;
+    font-size: 4.74mm;
+    text-transform: uppercase;
+}
+
+.sap-label.process-output-label .sap-fields-grid .barcode-cell {
+    vertical-align: top;
+    text-align: center;
+    padding: 0;
+    transform: translate(-18mm, -4mm);
+}
+
+.sap-label.process-output-label .sap-barcode-title,
+.sap-label.process-output-label .sap-barcode.sap-qr {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sap-label.process-output-label .sap-table td {
+    padding: 0.35mm 0;
+    vertical-align: baseline;
+}
+
+.sap-label.process-output-label .sap-table .v {
+    font-size: 4.74mm;
+    line-height: 1.1;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.sap-label.process-output-label .sap-barcode-title {
+    font-size: 4.8mm;
+    font-weight: 500;
+    text-align: center;
+}
+
+.sap-label.process-output-label .sap-barcode.sap-qr svg,
+.sap-label.process-output-label .sap-barcode.sap-qr .qr-svg {
+    width: 26.4mm;
+    height: 26.4mm;
+    display: block;
+    margin: 0 auto;
+}
+
+.sap-label.process-output-label .sap-barcode .code-text {
+    font-size: 4.2mm;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.1;
+    white-space: nowrap;
+    margin: 0 auto;
+}
+
+.sap-label.process-output-label .sap-barcode .grn-base-roll {
+    font-size: 4.8mm;
+    font-weight: 500;
+    line-height: 1.1;
+    text-align: center;
+    margin: 1.5mm auto 0;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.sap-company {
+    text-align: right;
+    font-size: 3.3mm;
+    line-height: 1.25;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sap-company strong {
+    display: block;
+    font-size: 3.4mm;
+    letter-spacing: 0.15mm;
+    font-weight: 700;
+}
+
+.sap-title {
+    margin: 2mm 0 2.5mm;
+    text-align: center;
+    font-weight: 700;
+    font-size: 6.2mm;
+    letter-spacing: 0.25mm;
+    flex-shrink: 0;
+}
+
+.sap-fields {
+    flex: 1 1 auto;
+    min-height: 0;
+    font-size: 4.2mm;
+    line-height: 1.2;
+}
+
+.sap-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.sap-table td {
+    padding: 0.7mm 0;
+    vertical-align: baseline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sap-fields-table .k,
+.sap-table .k {
+    width: 30mm;
+    color: #333;
+    font-weight: 500;
+}
+
+.sap-table .v {
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.sap-details-grid {
+    margin-top: 0.5mm;
+}
+
+.sap-details-grid .col-k { width: 30mm; }
+.sap-details-grid .col-v { width: 36mm; }
+.sap-details-grid .col-rk { width: 22mm; }
+.sap-details-grid .col-rv { width: auto; }
+
+.sap-details-grid td {
+    padding: 0.7mm 0;
+    vertical-align: top;
+}
+
+.sap-details-grid .rk {
+    color: #333;
+    font-weight: 500;
+    vertical-align: baseline;
+}
+
+.sap-details-grid .rv {
+    font-weight: 600;
+    vertical-align: baseline;
+}
+
+.sap-details-grid .barcode-cell {
+    width: 58mm;
+    vertical-align: top;
+    padding-left: 2mm;
+    text-align: center;
+}
+
+.sap-barcode-title {
+    text-align: center;
+    font-size: 3.6mm;
+    font-weight: 600;
+}
+
+.sap-barcode {
+    display: grid;
+    justify-items: center;
+    row-gap: 1mm;
+}
+
+.sap-barcode svg {
+    width: 55mm;
+    height: 12mm;
+    display: block;
+    margin: 0 auto;
+}
+
+.sap-barcode.sap-qr svg,
+.sap-barcode.sap-qr .qr-svg {
+    width: 28mm;
+    height: 28mm;
+    display: block;
+    margin: 0 auto;
+}
+
+.sap-barcode .code-text {
+    font-size: 3.9mm;
+    letter-spacing: 0.45mm;
+    font-weight: 500;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* On-screen preview scale (150mm label → ~108mm wide) */
+.label-preview-scale,
+.trace-label-scale {
+    width: 108mm;
+    height: 72mm;
+    margin: 0 auto;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.label-preview-scale .label-page,
+.trace-label-scale .label-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scale(0.72);
+    transform-origin: top left;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+@media print {
+    @page {
+        size: 150mm 100mm;
+        margin: 0;
+    }
+
+    .label-page {
+        page-break-after: always;
+        page-break-inside: avoid;
+        width: 150mm !important;
+        height: 100mm !important;
+        overflow: hidden !important;
+        border: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .label-page-inner {
+        width: 150mm !important;
+        height: 100mm !important;
+        transform: none !important;
+    }
+
+    .label-preview-scale .label-page,
+    .trace-label-scale .label-page {
+        transform: none !important;
+        box-shadow: none !important;
+        position: static !important;
+    }
+}

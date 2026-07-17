@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+
+        maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>VK Global Digital - Production Tracking</title>
+    <meta name="description" content="VK Global Digital - Machine-specific production tracking and job management">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231e40af' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='65' font-family='Arial' font-size='45' font-weight='bold' fill='white' text-anchor='middle'%3EVK%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="data-entry.css?v=20260615r">
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="background-animation"></div>
+
+    <!-- Header Bar -->
+    <header class="header-bar">
+        <!-- Left: Back & Machine Info -->
+        <div class="header-left">
+            <a href="index.html" class="back-button" id="back-button">
+                <span>←</span>
+            </a>
+            <div class="machine-info-group">
+                <h1 class="machine-title" id="machine-name">Machine Name</h1>
+                <div class="process-container">
+                    <span class="process-badge" id="process-name">Process</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Production Order search (SAP OWOR — not purchase order) -->
+        <div class="header-center">
+            <div class="po-search-container">
+                <span class="search-icon-small">🔍</span>
+                <input type="text" id="po-search-input" class="po-search-input"
+                    placeholder="Production Order #"
+                    title="SAP Production Order number (not Purchase Order)"
+                    aria-label="Production Order number">
+                <button id="po-search-btn" class="po-search-btn">Go</button>
+            </div>
+        </div>
+
+        <!-- Right: Reset Memory + Summary -->
+        <div class="header-right">
+            <button class="reset-memory-button" id="reset-memory-btn" title="Clear tablet memory">
+                <span>🗑️</span>
+                <span>Reset</span>
+            </button>
+            <button class="summary-button" id="view-summary-btn">
+                <span>📊</span>
+                <span>Summary</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content - Operator View -->
+    <div class="container operator-view">
+
+        <!-- Left Column: Control Center -->
+        <div class="control-panel">
+            <div class="panel-header">
+                <h2>Machine Controls</h2>
+            </div>
+
+            <div class="control-sections">
+                <!-- Section 1: Main Controls -->
+                <div class="control-group">
+                    <h3 class="group-title">Main Controls</h3>
+                    <div class="control-grid main-grid">
+                        <button class="control-btn makeready" id="state-makeready" data-state="makeready">
+                            <span class="btn-icon">🔧</span>
+                            <span class="btn-label">Make Ready</span>
+                        </button>
+                        <button class="control-btn running" id="state-running" data-state="running">
+                            <span class="btn-icon">▶️</span>
+                            <span class="btn-label">Running</span>
+                        </button>
+                        <button class="control-btn lunch" id="state-lunch" data-state="lunch">
+                            <span class="btn-icon">🍽️</span>
+                            <span class="btn-label">Break (Lunch)</span>
+                        </button>
+                        <button class="control-btn cleaning" id="state-cleaning" data-state="cleaning">
+                            <span class="btn-icon">🧹</span>
+                            <span class="btn-label">Cleaning</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section 2: Downtime -->
+                <div class="control-group">
+                    <h3 class="group-title">Downtime</h3>
+                    <div class="control-grid downtime-grid">
+                        <button class="control-btn downtime" id="state-downtime_elec" data-state="downtime_elec">
+                            <span class="btn-icon">⚡</span>
+                            <span class="btn-label">Electrical</span>
+                        </button>
+                        <button class="control-btn downtime" id="state-downtime_mech" data-state="downtime_mech">
+                            <span class="btn-icon">🔧</span>
+                            <span class="btn-label">Mechanical</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="action-grid">
+                <button class="action-btn finish" id="finish-job-btn">
+                    <span class="btn-icon">✅</span>
+                    <span class="btn-label">Finish Job</span>
+                </button>
+
+                <button class="action-btn shift-change" id="shift-changeover-btn-main" disabled>
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-label">Shift Changeover</span>
+                    <span class="btn-time-status" id="changeover-time-status-main">Not Time</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Column: Info Center -->
+        <div class="info-panel">
+            <!-- Left Column in Portrait: Timer -->
+            <div class="info-left-column">
+                <!-- Timer Display -->
+                <div class="timer-card">
+                    <div class="timer-label">Time in Current State</div>
+                    <div class="timer-display" id="timer-display">00:00:00</div>
+                    <div class="current-state-badge" id="current-state-label">Not Started</div>
+                </div>
+            </div>
+
+            <!-- Right Column in Portrait: Job Details -->
+            <div class="info-right-column">
+                <!-- Job Details -->
+                <div class="job-card-large">
+                    <div class="job-card-header">
+                        <span class="label">Active Job</span>
+                        <span class="status-badge" id="selected-job-status">No Job Selected</span>
+                    </div>
+                    <h2 class="job-number-large" id="selected-job-number">--</h2>
+                    <div class="job-name-large" id="selected-job-name">Select a job from "Manage Jobs"</div>
+
+                    <div class="job-stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Planned Qty</span>
+                            <span class="stat-value" id="selected-job-quantity">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Issued Qty</span>
+                            <span class="stat-value" id="selected-job-issued" style="color: #3b82f6;">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Already Done</span>
+                            <span class="stat-value" id="selected-job-completed" style="color: #10b981;">-</span>
+                        </div>
+                        <div class="stat-item embossing-only-stat" id="selected-job-chemical-wrap" style="display: none;">
+                            <span class="stat-label">Chemical Used</span>
+                            <span class="stat-value" id="selected-job-chemical" style="color: #ec4899;">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Remaining</span>
+                            <span class="stat-value" id="selected-job-remaining" style="color: #f59e0b;">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Summary Footer: operator + shift timer + clock in/out -->
+    <div class="summary-footer">
+        <div class="footer-stat">
+            <span class="footer-label">Operator</span>
+            <span class="footer-value footer-operator" id="footer-operator-name">-</span>
+        </div>
+        <div class="footer-stat highlight">
+            <span class="footer-label">Shift timer</span>
+            <span class="footer-value footer-shift-timer" id="footer-shift-timer">00:00:00</span>
+        </div>
+        <button type="button" class="footer-clock-btn clock-in" id="shift-clock-btn" title="Select operator and start shift timer">
+            Clock in
+        </button>
+    </div>
+
+    <!-- Finish Job — full page (Unit 1 report completion data entry) -->
+    <div class="modal-overlay fullscreen-page" id="finish-modal-overlay">
+        <div class="modal-content fullscreen-page-content">
+            <div class="modal-header fullscreen-page-header">
+                <h2 class="modal-title">Finish Job — Report Completion</h2>
+                <button class="modal-close" id="finish-modal-close">&times;</button>
+            </div>
+            <div class="modal-body fullscreen-page-body">
+                <form id="finish-job-form">
+                    <div id="standard-fields">
+                        <div id="finish-unit1-fields" style="display: none;">
+                            <div class="form-group">
+                                <label id="finish-inputs-label">Inputs Used *</label>
+                                <div id="finish-role-picker" class="role-picker">
+                                    <div class="role-picker-add-row">
+                                        <select id="finish-role-add-select" class="role-picker-select">
+                                            <option value="">— Select input batch —</option>
+                                        </select>
+                                        <button type="button" class="btn-secondary btn-sm" id="finish-role-add-btn">Add</button>
+                                    </div>
+                                    <div id="finish-role-selected-list" class="role-selected-list"></div>
+                                </div>
+                                <small class="form-hint" id="finish-inputs-hint">Select rolls/batches used this run (partial use OK — remainder stays for next batch)</small>
+                            </div>
+                            <input type="hidden" id="finish-embossing-role-used" value="0">
+                        </div>
+                        <div class="form-group" id="sheets-processed-group">
+                            <label for="sheets-processed" id="sheets-processed-label">Quantity Processed (KGS) *</label>
+                            <input type="number" id="sheets-processed" name="sheetsProcessed" min="0" step="any">
+                            <small class="form-hint" id="sheets-processed-hint">Actual quantity produced this batch (posted to SAP)</small>
+                        </div>
+                        <div class="form-group" id="finish-chemical-group" style="display: none;">
+                            <label for="finish-embossing-chemical-used">Chemical Used (KGS)</label>
+                            <input type="number" id="finish-embossing-chemical-used" name="embossingChemicalUsed" min="0" step="any" value="0" readonly>
+                            <small class="form-hint">Auto: Actual Output − Total Inputs Used</small>
+                        </div>
+                        <div class="form-group" id="wasted-sheets-group">
+                            <label for="wasted-sheets" id="wasted-sheets-label">Wasted Quantity (KGS) *</label>
+                            <input type="number" id="wasted-sheets" name="wastedSheets" min="0" step="any">
+                            <small class="form-hint" id="wasted-sheets-hint">Auto-calculated for embossing</small>
+                        </div>
+                        <div class="form-group" id="finish-batch-dimensions-group">
+                            <label for="finish-batch-width">Batch Width (mm) *</label>
+                            <input type="number" id="finish-batch-width" name="batchWidth" min="0.01" step="any" required
+                                placeholder="e.g. 1280">
+                            <small class="form-hint">Enter actual produced roll width</small>
+                        </div>
+                        <div class="form-group" id="finish-batch-length-group">
+                            <label for="finish-batch-length">Batch Length (m) *</label>
+                            <input type="number" id="finish-batch-length" name="batchLength" min="0.01" step="any" required
+                                placeholder="e.g. 2.5">
+                            <small class="form-hint">Actual produced roll length in metres</small>
+                        </div>
+                    </div>
+                    <div class="form-group" id="standard-remarks">
+                        <label for="finish-remarks">Remarks</label>
+                        <textarea id="finish-remarks" name="remarks" rows="3" placeholder="Optional remarks..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions page-footer-actions">
+                <button type="button" class="btn-secondary" id="finish-cancel-btn">Cancel</button>
+                <button type="submit" form="finish-job-form" class="btn-primary" id="finish-submit-btn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process output label preview (embossing report completion) — full page -->
+    <div class="modal-overlay fullscreen-page" id="process-label-modal-overlay">
+        <div class="modal-content fullscreen-page-content">
+            <div class="modal-header fullscreen-page-header">
+                <h2 class="modal-title">Process Output Label</h2>
+                <button class="modal-close" type="button" id="process-label-modal-close">&times;</button>
+            </div>
+            <div class="modal-body fullscreen-page-body">
+                <p class="form-hint" id="process-label-hint">Label is generated after job is saved. Print or close when done.</p>
+                <div id="process-label-print-status" class="process-label-print-status" style="display: none;" aria-live="polite"></div>
+                <div id="process-label-preview-host" class="label-preview-host"></div>
+            </div>
+            <div class="modal-actions page-footer-actions">
+                <button type="button" class="btn-secondary" id="process-label-browser-print-btn">Print on this device</button>
+                <button type="button" class="btn-secondary" id="process-label-print-btn">Send to label printer</button>
+                <button type="button" class="btn-primary" id="process-label-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report completion / job summary — full page (after Finish Job) -->
+    <div class="modal-overlay fullscreen-page" id="job-summary-modal-overlay">
+        <div class="modal-content fullscreen-page-content">
+            <div class="modal-header fullscreen-page-header">
+                <h2 class="modal-title">Job Overview — <span id="summary-job-number"></span></h2>
+                <button class="modal-close" id="job-summary-modal-close">&times;</button>
+            </div>
+            <div class="modal-body fullscreen-page-body">
+                <div class="summary-section">
+                    <h3 class="summary-section-title">Time Breakdown</h3>
+                    <form id="job-summary-form">
+                        <div class="form-group">
+                            <label for="summary-makeready-time">Make Ready Time (HH:MM:SS) *</label>
+                            <input type="text" id="summary-makeready-time" name="makereadyTime" required 
+                                pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"
+                                placeholder="00:00:00" disabled>
+                            <small class="form-hint">Format: HH:MM:SS (e.g., 01:30:45)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="summary-running-time">Running Time (HH:MM:SS) *</label>
+                            <input type="text" id="summary-running-time" name="runningTime" required 
+                                pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"
+                                placeholder="00:00:00" disabled>
+                            <small class="form-hint">Format: HH:MM:SS (e.g., 02:15:30)</small>
+                        </div>
+                        <div class="time-stat-card" style="margin: 10px 0; padding: 15px; background: rgba(0, 242, 169, 0.1); border-radius: 8px;">
+                            <div class="time-stat-label">Total Session Time</div>
+                            <div class="time-stat-value" id="summary-job-total-time">00:00:00</div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="summary-section">
+                    <h3 class="summary-section-title">Production Overview</h3>
+                    <div id="summary-production-overview" class="process-label-preview-host" style="display: none;"></div>
+                    <form id="job-summary-form" style="display: none;">
+                        <input type="hidden" id="summary-sheets-processed" name="sheetsProcessed" value="0">
+                        <input type="hidden" id="summary-wasted-sheets" name="wastedSheets" value="0">
+                        <input type="hidden" id="summary-remarks" name="remarks" value="">
+                        <input type="hidden" id="summary-embossing-chemical-used" value="0">
+                        <div id="autoIssueResults" style="display: none;"></div>
+                    </form>
+                    <div class="form-group" id="summary-packing-group" style="display: none;">
+                        <label for="summary-packing-details">Packing Qty *</label>
+                        <input type="number" id="summary-packing-details" name="packingDetails" min="0" placeholder="e.g. 50" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions page-footer-actions">
+                <button type="button" class="btn-secondary" id="summary-back-btn">Back</button>
+                <button type="button" class="btn-primary" id="summary-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Job Modal -->
+    <div class="modal-overlay" id="cancel-modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Cancel Job</h2>
+                <button class="modal-close" id="cancel-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cancel-job-form">
+                    <div class="form-group">
+                        <label for="cancel-reason">Cancellation Reason *</label>
+                        <textarea id="cancel-reason" name="cancelReason" rows="4" required
+                            placeholder="Reason..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" id="cancel-cancel-btn">Back</button>
+                        <button type="submit" class="btn-danger">Cancel Job</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breakdown Reason Modal -->
+    <div class="modal-overlay" id="breakdown-reason-modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="breakdown-modal-title">Breakdown Reason</h2>
+                <button class="modal-close" id="breakdown-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="breakdown-reason-form">
+                    <div class="form-group">
+                        <label for="breakdown-type-display">Breakdown Type</label>
+                        <input type="text" id="breakdown-type-display" readonly disabled>
+                        <input type="hidden" id="breakdown-state" name="breakdownState">
+                    </div>
+                    <div class="form-group">
+                        <label for="breakdown-reason">Reason for Breakdown *</label>
+                        <div class="textarea-with-mic">
+                            <textarea id="breakdown-reason" name="breakdownReason" rows="4" required
+                                placeholder="Please describe the reason for this breakdown..."></textarea>
+                            <button type="button" class="mic-btn" id="breakdown-mic-btn" title="Click to speak">
+                                🎤
+                            </button>
+                        </div>
+                        <div class="mic-controls">
+                            <small class="mic-status" id="mic-status"></small>
+                            <select id="speech-language" class="speech-lang-select" title="Speech language">
+                                <option value="en-IN">English (India)</option>
+                                <option value="en-US">English (US)</option>
+                                <option value="hi-IN">Hindi</option>
+                                <option value="ta-IN">Tamil</option>
+                                <option value="te-IN">Telugu</option>
+                                <option value="mr-IN">Marathi</option>
+                                <option value="gu-IN">Gujarati</option>
+                            </select>
+                        </div>
+                        <small class="form-hint">💡 Tip: Speak clearly, one sentence at a time for best results</small>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" id="breakdown-cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Makeready Type Selection Modal -->
+    <div class="modal-overlay" id="makeready-type-modal-overlay">
+        <div class="modal-content modal-compact">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Makeready Type</h2>
+                <button class="modal-close" id="makeready-type-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="makeready-type-options">
+                    <button class="makeready-type-btn new-makeready" data-type="new">
+                        <span class="btn-icon">🆕</span>
+                        <span class="btn-label">New Makeready</span>
+                        <span class="btn-desc">First time running this job</span>
+                    </button>
+                    <button class="makeready-type-btn repeat-makeready" data-type="repeat">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-label">Repeat Makeready</span>
+                        <span class="btn-desc">Job has been run before</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shift Summary Modal -->
+    <div class="modal-overlay" id="summary-modal-overlay">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 class="modal-title">Shift Summary - <span id="summary-date"></span></h2>
+                <p class="summary-operator-line" id="summary-operator-line" style="display:none; margin:0; font-size:0.9rem; color:#9ca3af;"></p>
+                <button class="modal-close" id="summary-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-section">
+                    <h3 class="summary-section-title">Time Breakdown</h3>
+                    <div class="time-stats-grid">
+                        <div class="time-stat-card">
+                            <div class="time-stat-label">Running</div>
+                            <div class="time-stat-value" id="summary-running-time">00:00:00</div>
+                        </div>
+                        <div class="time-stat-card">
+                            <div class="time-stat-label">Make Ready</div>
+                            <div class="time-stat-value" id="summary-makeready-time">00:00:00</div>
+                        </div>
+                        <div class="time-stat-card">
+                            <div class="time-stat-label">Idle</div>
+                            <div class="time-stat-value" id="summary-idle-time">00:00:00</div>
+                        </div>
+                        <div class="time-stat-card">
+                            <div class="time-stat-label">Lunch</div>
+                            <div class="time-stat-value" id="summary-lunch-time">00:00:00</div>
+                        </div>
+                        <div class="time-stat-card">
+                            <div class="time-stat-label">Downtime</div>
+                            <div class="time-stat-value" id="summary-downtime-time">00:00:00</div>
+                        </div>
+                        <div class="time-stat-card total">
+                            <div class="time-stat-label">Total</div>
+                            <div class="time-stat-value" id="summary-total-time">00:00:00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-section">
+                    <h3 class="summary-section-title">Jobs Processed</h3>
+                    <div class="jobs-summary-table" id="jobs-summary-table"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Memory PIN Modal -->
+    <div class="modal-overlay" id="reset-memory-modal-overlay">
+        <div class="modal-content modal-compact">
+            <div class="modal-header">
+                <h2 class="modal-title">🔒 Reset Memory</h2>
+                <button class="modal-close" id="reset-memory-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="reset-warning-text">⚠️ This will clear all stored data on this tablet including:</p>
+                <ul class="reset-warning-list">
+                    <li>All loaded jobs</li>
+                    <li>Timer data and state history</li>
+                    <li>Current machine state</li>
+                    <li>Operator information</li>
+                </ul>
+                <div class="form-group">
+                    <label for="reset-pin-input">Enter 4-Digit PIN to confirm</label>
+                    <input type="password" id="reset-pin-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••" autocomplete="off">
+                    <span class="pin-error-message" id="pin-error-message"></span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="reset-memory-cancel">Cancel</button>
+                    <button class="btn-danger" id="reset-memory-confirm">Clear Memory</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="process-label-print-container" class="process-label-print-container" aria-hidden="true"></div>
+
+    <script src="validation.js"></script>
+    <script src="live-tracking.js"></script>
+    <script src="node_modules/qrcode-generator/dist/qrcode.js"></script>
+    <script src="node_modules/html2canvas/dist/html2canvas.min.js"></script>
+    <script src="process-label-formats.js?v=20260615i"></script>
+    <script src="label-print-raster.js?v=20260707a"></script>
+    <script src="data-entry.js?v=20260706b"></script>
+</body>
+
+</html>
