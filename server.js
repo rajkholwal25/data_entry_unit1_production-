@@ -209,6 +209,11 @@ const VERBOSE_LOG = process.env.VERBOSE_LOG === 'true' || DEBUG_PO_LOG;
 function vlog(...args) { if (VERBOSE_LOG) console.log(...args); }
 function vwarn(...args) { if (VERBOSE_LOG) console.warn(...args); }
 
+function sapQuantity(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+}
+
 /** Shared https agent — reuses TLS connections to SAP instead of creating a new socket per request. */
 const sapHttpsAgent = new (require('https').Agent)({
     rejectUnauthorized: false,
@@ -3310,7 +3315,7 @@ function buildFgLinesFromProductionOrder(productionOrder, isExcludedMaterialItem
     const headerItem = String(productionOrder.ItemNo || '').trim();
     const lines = productionOrder.ProductionOrderLines || [];
     const headerPlanned = productionOrder.PlannedQuantity || 0;
-    const headerCompleted = Math.floor(productionOrder.CompletedQuantity || 0);
+    const headerCompleted = sapQuantity(productionOrder.CompletedQuantity);
 
     const mainLine = lines.find((line) => {
         if (!isSapItemLine(line)) return false;
@@ -3364,7 +3369,7 @@ function buildFgLinesFromProductionOrder(productionOrder, isExcludedMaterialItem
             plannedQuantity: Math.abs(Math.floor(plannedQty)),
             baseQuantity: line.BaseQuantity ?? 0,
             issuedQuantity: Math.abs(line.IssuedQuantity || 0),
-            completedQuantity: Math.floor(line.CompletedQuantity || 0),
+            completedQuantity: sapQuantity(line.CompletedQuantity),
             warehouse: line.Warehouse || line.WarehouseCode || null
         });
     }
@@ -4994,9 +4999,9 @@ async function getUnit1PoAlreadyDoneQty(docNumber, headerCompletedQty = 0) {
             return 0;
         }
         if (localCompleted > 0) return localCompleted;
-        return Math.floor(Number(headerCompletedQty) || 0);
+        return sapQuantity(headerCompletedQty);
     } catch (_) {
-        return localCompleted > 0 ? localCompleted : Math.floor(Number(headerCompletedQty) || 0);
+        return localCompleted > 0 ? localCompleted : sapQuantity(headerCompletedQty);
     }
 }
 
@@ -5023,7 +5028,7 @@ async function getUnit1ProcessInputIssuedQty(docNumber, uPCode, fgItemCode) {
                 `/ProductionOrders?$filter=DocumentNumber eq ${srcPo}&$select=AbsoluteEntry,CompletedQuantity&$top=50`
             );
             const row = await pickProductionOrderCandidate(srcPo, srcResp?.value || []);
-            headerDone = Math.floor(row?.CompletedQuantity || 0);
+            headerDone = sapQuantity(row?.CompletedQuantity);
         } catch (_) { /* use local only */ }
         total += await getUnit1PoAlreadyDoneQty(srcPo, headerDone);
     }
@@ -5707,7 +5712,7 @@ async function reconcileAutoIssueGap(params) {
         );
         const sourceCompleted = await getUnit1PoAlreadyDoneQty(
             sourceDocNumber || sourcePO.DocumentNumber,
-            Math.floor(sourcePO.CompletedQuantity || 0)
+            sapQuantity(sourcePO.CompletedQuantity)
         );
         if (sourceCompleted <= 0) {
             return { success: true, skipped: true, gap: 0, message: 'No SAP completed qty on source PO' };
@@ -6540,7 +6545,7 @@ app.get('/api/production-order/:docNumber', async (req, res) => {
         let issuedQuantity = 0;
         let completedQuantity = 0;
         
-        const headerCompletedQty = Math.floor(productionOrder.CompletedQuantity || 0);
+        const headerCompletedQty = sapQuantity(productionOrder.CompletedQuantity);
         if (DEBUG_PO_LOG) {
             vlog(`📊 Header-level CompletedQuantity from SAP: ${headerCompletedQty} (fallback if no pit_Item line qty)`);
         }
@@ -6567,7 +6572,7 @@ app.get('/api/production-order/:docNumber', async (req, res) => {
                     if (issued > 0) {
                         issuedQuantity += issued;
                     }
-                    lineCompletedSum += Math.floor(line.CompletedQuantity || 0);
+                    lineCompletedSum += sapQuantity(line.CompletedQuantity);
                 });
                 completedQuantity = lineCompletedSum > 0 ? lineCompletedSum : headerCompletedQty;
                 if (DEBUG_PO_LOG) {
@@ -6581,7 +6586,7 @@ app.get('/api/production-order/:docNumber', async (req, res) => {
                 );
                 if (firstItemLine) {
                     issuedQuantity = Math.abs(firstItemLine.IssuedQuantity || 0);
-                    completedQuantity = Math.floor(firstItemLine.CompletedQuantity || 0) || headerCompletedQty;
+                    completedQuantity = sapQuantity(firstItemLine.CompletedQuantity) || headerCompletedQty;
                 } else {
                     completedQuantity = headerCompletedQty;
                 }

@@ -76,6 +76,27 @@ async function ensureColumn(table, column, definition) {
     }
 }
 
+/** Upgrade INT quantity columns to DECIMAL so KGS values like 12.3 are stored as-is. */
+async function ensureDecimalColumn(table, column, definition) {
+    try {
+        const [colRows] = await pool.query(
+            `SELECT DATA_TYPE AS dataType
+               FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = ?
+                AND COLUMN_NAME = ?`,
+            [table, column]
+        );
+        const dataType = String(colRows[0]?.dataType || '').toLowerCase();
+        if (['int', 'bigint', 'mediumint', 'smallint', 'tinyint'].includes(dataType)) {
+            await pool.query(`ALTER TABLE \`${table}\` MODIFY COLUMN \`${column}\` ${definition}`);
+            vlog(`   ✅ ${table}.${column} upgraded to ${definition}`);
+        }
+    } catch (err) {
+        console.warn(`⚠️ ${table}.${column} decimal migration failed:`, err.message);
+    }
+}
+
 async function safeCreateIndex(name, sql) {
     try {
         await pool.query(sql);
@@ -117,11 +138,11 @@ async function ensureSchema() {
             planned_qty                INT             DEFAULT 0,
             job_start_time             DATETIME        NULL,
             job_end_time               DATETIME        NULL,
-            quantity_processed         INT             DEFAULT 0,
+            quantity_processed         DECIMAL(18,4)   DEFAULT 0,
             role_quantity_used         DECIMAL(18,4)   NULL,
             chemical_quantity_used     DECIMAL(18,4)   NULL,
             speed_impressions_per_hour DECIMAL(18,4)   DEFAULT 0,
-            sheets_wasted              INT             DEFAULT 0,
+            sheets_wasted              DECIMAL(18,4)   DEFAULT 0,
             remark                     TEXT            NULL,
             activity_name              VARCHAR(64)     NULL,
             activity_time_minutes      DECIMAL(18,4)   DEFAULT 0,
@@ -160,6 +181,8 @@ async function ensureSchema() {
     await ensureColumn('production_records', 'chemical_quantity_used', 'DECIMAL(18,4) NULL');
     await ensureColumn('production_records', 'u_width', 'DECIMAL(18,4) NULL');
     await ensureColumn('production_records', 'u_length', 'DECIMAL(18,4) NULL');
+    await ensureDecimalColumn('production_records', 'quantity_processed', 'DECIMAL(18,4) DEFAULT 0');
+    await ensureDecimalColumn('production_records', 'sheets_wasted', 'DECIMAL(18,4) DEFAULT 0');
 
     await pool.query(`
         CREATE TABLE IF NOT EXISTS po_customer_cache (

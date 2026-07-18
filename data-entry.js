@@ -3137,8 +3137,8 @@ function showShiftChangeoverProductionModal() {
             
             if (isNarendra) {
                 // Narendra: Quantity + Wastage
-                sheetsProcessed = parseInt(document.getElementById('shift-sheets-processed').value) || 0;
-                wastedSheets = parseInt(document.getElementById('shift-wasted-sheets').value) || 0;
+                sheetsProcessed = parseFloat(document.getElementById('shift-sheets-processed').value) || 0;
+                wastedSheets = parseFloat(document.getElementById('shift-wasted-sheets').value) || 0;
                 machineSpeed = 0;
                 
                 if (sheetsProcessed <= 0) {
@@ -3151,8 +3151,8 @@ function showShiftChangeoverProductionModal() {
                 }
             } else {
                 // Standard fields
-                sheetsProcessed = parseInt(document.getElementById('shift-sheets-processed').value) || 0;
-                wastedSheets = parseInt(document.getElementById('shift-wasted-sheets').value) || 0;
+                sheetsProcessed = parseFloat(document.getElementById('shift-sheets-processed').value) || 0;
+                wastedSheets = parseFloat(document.getElementById('shift-wasted-sheets').value) || 0;
                 machineSpeed = 0;
                 
                 // Validate standard fields
@@ -8224,8 +8224,8 @@ async function handleFinishJob(e) {
     if (isLaminationMachine()) {
         if (isNarendraMachine()) {
             // Narendra: Use standard quantity/wastage fields, plus extra fields appended to remarks
-            sheetsProcessed = parseInt(formData.get('sheetsProcessed')) || 0;
-            wastedSheets = parseInt(formData.get('wastedSheets')) || 0;
+            sheetsProcessed = parseFloat(formData.get('sheetsProcessed')) || 0;
+            wastedSheets = parseFloat(formData.get('wastedSheets')) || 0;
             machineSpeed = 0;
 
             const nParts = [];
@@ -8244,15 +8244,15 @@ async function handleFinishJob(e) {
             remarks = [baseLam, extra].filter(Boolean).join(' || ');
         } else {
             // Other lamination machines: Standard fields
-            sheetsProcessed = parseInt(formData.get('sheetsProcessed')) || 0;
-            wastedSheets = parseInt(formData.get('wastedSheets')) || 0;
+            sheetsProcessed = parseFloat(formData.get('sheetsProcessed')) || 0;
+            wastedSheets = parseFloat(formData.get('wastedSheets')) || 0;
             machineSpeed = 0;
             remarks = formData.get('remarks') || '';
         }
     } else if (isFoldingPastingMachine()) {
         // Folding/Pasting: Standard fields with special remarks
-        sheetsProcessed = parseInt(formData.get('sheetsProcessed')) || 0;
-        wastedSheets = parseInt(formData.get('wastedSheets')) || 0;
+        sheetsProcessed = parseFloat(formData.get('sheetsProcessed')) || 0;
+        wastedSheets = parseFloat(formData.get('wastedSheets')) || 0;
         machineSpeed = 0;
         // Build folding remarks
         remarks = buildFoldingRemarks(formData);
@@ -8297,8 +8297,8 @@ async function handleFinishJob(e) {
         }
     } else {
         // Other machines: Standard fields
-        sheetsProcessed = parseInt(formData.get('sheetsProcessed')) || 0;
-        wastedSheets = parseInt(formData.get('wastedSheets')) || 0;
+        sheetsProcessed = parseFloat(formData.get('sheetsProcessed')) || 0;
+        wastedSheets = parseFloat(formData.get('wastedSheets')) || 0;
         machineSpeed = 0;
         remarks = formData.get('remarks') || '';
     }

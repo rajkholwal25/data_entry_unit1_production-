@@ -100,6 +100,11 @@ class ValidationResult {
 
 // ==================== Quantity Validations ====================
 
+function parseQty(value) {
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : 0;
+}
+
 /**
  * Validate quantity-related fields
  * @param {Object} data - { sheetsProcessed, wastedSheets, plannedQuantity }
@@ -507,9 +512,9 @@ function validateJobCompletion(data) {
 
     // Extract and normalize data
     const normalizedData = {
-        sheetsProcessed: parseInt(data.sheetsProcessed) || 0,
-        wastedSheets: parseInt(data.wastedSheets) || 0,
-        plannedQuantity: parseInt(data.plannedQuantity) || 0,
+        sheetsProcessed: parseQty(data.sheetsProcessed),
+        wastedSheets: parseQty(data.wastedSheets),
+        plannedQuantity: parseQty(data.plannedQuantity),
         machineSpeed: parseInt(data.machineSpeed) || 0,
         makereadySeconds: data.makereadySeconds || 0,
         runningSeconds: data.runningSeconds || 0,
@@ -548,8 +553,8 @@ function validateFinishJobForm(formData, jobData) {
 
     // Validate quantities
     result.merge(validateQuantities({
-        sheetsProcessed: parseInt(formData.sheetsProcessed),
-        wastedSheets: parseInt(formData.wastedSheets),
+        sheetsProcessed: parseQty(formData.sheetsProcessed),
+        wastedSheets: parseQty(formData.wastedSheets),
         plannedQuantity: jobData.plannedQuantity || 0
     }));
 
